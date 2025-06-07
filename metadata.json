@@ -1,0 +1,6 @@
+{
+  "name": "React Markdown Blog v5",
+  "description": "A simple blog application built with React, TypeScript, Tailwind CSS, and HashRouter. It reads blog posts from pre-defined Markdown content and renders them. Note: True SSR is not implemented due to the HashRouter constraint; this is a client-side rendered SPA.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

@@ -1,0 +1,15 @@
+{
+  "slugs": [
+    "getting-started-with-react-hooks",
+    "mastering-tailwind-css",
+    "understanding-async-javascript",
+    "deep-dive-into-css-grid",
+    "modern-javascript-es2023-features",
+    "building-accessible-web-applications",
+    "introduction-to-deno-runtime",
+    "graphql-vs-rest-apis",
+    "optimizing-web-performance-core-web-vitals",
+    "state-management-in-react-beyond-usestate",
+    "serverless-architecture-introduction"
+  ]
+}
