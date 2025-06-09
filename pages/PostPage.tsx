@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Post } from '../types';
 import MarkdownRenderer from '../components/MarkdownRenderer';
-import { parseFrontMatter } from '../utils/frontMatterParser'; 
-import GeminiQueryBox from '../components/GeminiQueryBox'; // Import GeminiQueryBox
+import { posts as staticPosts } from '../data/posts';
 
 // SVG Icons for Social Sharing (remain unchanged)
 const TwitterIcon: React.FC<{ className?: string }> = ({ className = "h-5 w-5" }) => (
@@ -52,56 +51,23 @@ const PostPage: React.FC = () => {
     if (!slug) {
       setError('Post slug is missing.');
       setIsLoading(false);
-      setPost({ ...DEFAULT_POST_PAGE_VALUES, slug: 'unknown-slug'});
+      setPost({ ...DEFAULT_POST_PAGE_VALUES, slug: 'unknown-slug' });
       return;
     }
 
     setIsLoading(true);
     setError(null);
-    setPost(undefined); 
+    setPost(undefined);
 
-    fetch(`/content/posts/${slug}.md`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch markdown: ${response.statusText} (status: ${response.status})`);
-        }
-        return response.text();
-      })
-      .then(rawContent => {
-        const { frontMatter, content: markdownBody } = parseFrontMatter(rawContent); 
-
-        // Ensure tags are always an array of strings from frontMatter
-        let tags: string[] = [];
-         if (frontMatter.tags) {
-            if (typeof frontMatter.tags === 'string') {
-                tags = frontMatter.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-            } else if (Array.isArray(frontMatter.tags)) {
-                tags = frontMatter.tags.map(tag => String(tag).trim()).filter(tag => tag);
-            }
-        }
-
-
-        const combinedPostData: Post = {
-          slug: slug,
-          title: (frontMatter.title as string) || DEFAULT_POST_PAGE_VALUES.title,
-          date: (frontMatter.date as string) || DEFAULT_POST_PAGE_VALUES.date,
-          author: (frontMatter.author as string) || DEFAULT_POST_PAGE_VALUES.author,
-          excerpt: (frontMatter.excerpt as string) || DEFAULT_POST_PAGE_VALUES.excerpt,
-          tags: tags.length > 0 ? tags : DEFAULT_POST_PAGE_VALUES.tags,
-          imageUrl: (frontMatter.imageUrl as string) || DEFAULT_POST_PAGE_VALUES.imageUrl,
-          markdownContent: markdownBody || DEFAULT_POST_PAGE_VALUES.markdownContent,
-        };
-        setPost(combinedPostData);
-      })
-      .catch(err => {
-        console.error('Error processing post content:', err);
-        setError(`Could not load post content. ${err.message}`);
-        setPost({ ...DEFAULT_POST_PAGE_VALUES, slug: slug, title: `Error: ${slug}` });
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-
+    const found = staticPosts[slug];
+    if (found) {
+      setPost(found);
+      setIsLoading(false);
+    } else {
+      setError('Post not found.');
+      setPost({ ...DEFAULT_POST_PAGE_VALUES, slug: slug, title: `Error: ${slug}` });
+      setIsLoading(false);
+    }
   }, [slug]);
 
   const handleShare = (platform: 'twitter' | 'facebook' | 'linkedin' | 'email') => {
@@ -214,11 +180,6 @@ const PostPage: React.FC = () => {
         )}
 
         {/* Gemini Query Box Section */}
-        {post && post.markdownContent && (
-          <div className="mt-10 pt-8 border-t border-gray-200">
-            <GeminiQueryBox postContent={post.markdownContent} />
-          </div>
-        )}
 
         {/* Social Share Section */}
         <div className="mt-10 pt-8 border-t border-gray-200">

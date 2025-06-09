@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchPostMetadataBySlug } from '../utils/postUtils';
+import { allPosts as staticPosts } from '../data/posts';
 import PostCard from '../components/PostCard';
 import { Post } from '../types';
 import { useSiteConfig } from '../contexts/SiteConfigContext';
@@ -14,39 +14,19 @@ const HomePage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    const loadPosts = async () => {
-      setIsLoadingPosts(true);
-      setPostsError(null);
-      try {
-        const manifestResponse = await fetch('/content/posts-manifest.json');
-        if (!manifestResponse.ok) {
-          throw new Error(`Failed to fetch posts-manifest.json: ${manifestResponse.statusText}`);
-        }
-        const manifest = await manifestResponse.json();
-        const postSlugs: string[] = manifest.slugs || [];
-
-        if (postSlugs.length === 0) {
-          setAllPosts([]);
-          setIsLoadingPosts(false);
-          return;
-        }
-
-        const fetchedPostsMetadata = await Promise.all(
-          postSlugs.map(slug => fetchPostMetadataBySlug(slug))
-        );
-        
-        const validPosts = fetchedPostsMetadata.filter(post => !post.title.startsWith('Error Loading:'));
-        
-        const sortedPosts = validPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setAllPosts(sortedPosts);
-      } catch (err: any) {
-        console.error("Failed to load posts:", err);
-        setPostsError(`Could not load posts. ${err.message || "Please try again later."}`);
-      } finally {
-        setIsLoadingPosts(false);
-      }
-    };
-    loadPosts();
+    setIsLoadingPosts(true);
+    try {
+      const sorted = staticPosts
+        .slice()
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .map(({ markdownContent, ...rest }) => rest);
+      setAllPosts(sorted);
+    } catch (err: any) {
+      console.error('Failed to load posts:', err);
+      setPostsError(`Could not load posts. ${err.message || 'Please try again later.'}`);
+    } finally {
+      setIsLoadingPosts(false);
+    }
   }, []);
 
   const heroImageUrl = isConfigLoading || configError ? null : config.homepageHeroImageUrl;

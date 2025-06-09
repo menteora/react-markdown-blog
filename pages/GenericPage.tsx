@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Page } from '../types';
 import MarkdownRenderer from '../components/MarkdownRenderer';
-import { parseFrontMatter } from '../utils/frontMatterParser';
+import { pages as staticPages } from '../data/pages';
 
 const GenericPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -22,30 +22,14 @@ const GenericPage: React.FC = () => {
     setError(null);
     setPage(undefined);
 
-    fetch(`/content/pages/${slug}.md`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch page content: ${response.statusText} (status: ${response.status})`);
-        }
-        return response.text();
-      })
-      .then(rawContent => {
-        const { frontMatter, content: markdownBody } = parseFrontMatter(rawContent); // frontMatter is Record<string, any>
-        
-        const pageData: Page = {
-          slug: slug,
-          title: (frontMatter.title as string) || 'Untitled Page', // Default title if not in front matter
-          markdownContent: markdownBody,
-        };
-        setPage(pageData);
-      })
-      .catch(err => {
-        console.error('Error processing page content:', err);
-        setError(`Could not load page content. ${err.message}`);
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
+    const found = staticPages[slug];
+    if (found) {
+      setPage(found);
+      setIsLoading(false);
+    } else {
+      setError('Page not found.');
+      setIsLoading(false);
+    }
 
   }, [slug]);
 

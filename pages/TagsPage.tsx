@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchPostMetadataBySlug } from '../utils/postUtils';
-import { Post } from '../types';
+import { allPosts as staticPosts } from '../data/posts';
 
 const TagsPage: React.FC = () => {
   const [tags, setTags] = useState<string[]>([]);
@@ -9,38 +8,17 @@ const TagsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadTags = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const manifestResponse = await fetch('/content/posts-manifest.json');
-        if (!manifestResponse.ok) {
-          throw new Error(`Failed to fetch posts-manifest.json: ${manifestResponse.statusText}`);
-        }
-        const manifest = await manifestResponse.json();
-        const postSlugs: string[] = manifest.slugs || [];
-
-        if (postSlugs.length === 0) {
-          setTags([]);
-          setIsLoading(false);
-          return;
-        }
-
-        const postsMetadata = await Promise.all(
-          postSlugs.map(slug => fetchPostMetadataBySlug(slug))
-        );
-        const validPosts = postsMetadata.filter(post => !post.title.startsWith('Error Loading:'));
-        const allTagsWithDuplicates = validPosts.flatMap(post => post.tags);
-        const uniqueTags = Array.from(new Set(allTagsWithDuplicates)).sort((a, b) => a.localeCompare(b));
-        setTags(uniqueTags);
-      } catch (err: any) {
-        console.error("Failed to load tags:", err);
-        setError(`Could not load tags. ${err.message || "Please try again later."}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadTags();
+    setIsLoading(true);
+    try {
+      const allTagsWithDuplicates = staticPosts.flatMap(p => p.tags);
+      const uniqueTags = Array.from(new Set(allTagsWithDuplicates)).sort((a, b) => a.localeCompare(b));
+      setTags(uniqueTags);
+    } catch (err: any) {
+      console.error('Failed to load tags:', err);
+      setError(`Could not load tags. ${err.message || 'Please try again later.'}`);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   if (isLoading) {

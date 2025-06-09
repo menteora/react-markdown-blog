@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import PostPage from './pages/PostPage';
@@ -15,7 +15,7 @@ const App: React.FC = () => {
   return (
     <SiteConfigProvider>
       <CookieConsentProvider>
-        <HashRouter>
+        <BrowserRouter>
           <div className="flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-grow bg-gray-100 py-8">
@@ -44,7 +44,7 @@ const App: React.FC = () => {
               </p>
             </footer>
           </div>
-        </HashRouter>
+        </BrowserRouter>
       </CookieConsentProvider>
     </SiteConfigProvider>
   );

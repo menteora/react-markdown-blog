@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchPostMetadataBySlug } from '../utils/postUtils';
 import PostCard from '../components/PostCard';
 import { Post } from '../types';
+import { allPosts as staticPosts } from '../data/posts';
 
 const PostsByTagPage: React.FC = () => {
   const { tagName: encodedTagName } = useParams<{ tagName: string }>();
@@ -19,38 +19,21 @@ const PostsByTagPage: React.FC = () => {
       return;
     }
 
-    const loadPostsByTag = async () => {
+    const loadPostsByTag = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const manifestResponse = await fetch('/content/posts-manifest.json');
-        if (!manifestResponse.ok) {
-          throw new Error(`Failed to fetch posts-manifest.json: ${manifestResponse.statusText}`);
-        }
-        const manifest = await manifestResponse.json();
-        const postSlugs: string[] = manifest.slugs || [];
-        
-        if (postSlugs.length === 0) {
-          setFilteredPosts([]);
-          setIsLoading(false);
-          return;
-        }
-
-        const postsMetadata = await Promise.all(
-          postSlugs.map(slug => fetchPostMetadataBySlug(slug))
-        );
-        const validPosts = postsMetadata.filter(post => !post.title.startsWith('Error Loading:'));
-        
-        const postsForTag = validPosts.filter(post => 
+        const postsForTag = staticPosts.filter(post =>
           post.tags.map(t => t.toLowerCase()).includes(tagName.toLowerCase())
         );
-        
-        const sortedPosts = postsForTag.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        const sortedPosts = postsForTag
+          .slice()
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          .map(({ markdownContent, ...rest }) => rest);
         setFilteredPosts(sortedPosts);
-
       } catch (err: any) {
         console.error(`Failed to load posts for tag "${tagName}":`, err);
-        setError(`Could not load posts for tag "${tagName}". ${err.message || "Please try again later."}`);
+        setError(`Could not load posts for tag "${tagName}". ${err.message || 'Please try again later.'}`);
       } finally {
         setIsLoading(false);
       }
