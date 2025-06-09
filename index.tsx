@@ -1,17 +1,18 @@
-
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import type { IndexComponentProps } from '@wroud/vite-plugin-ssg';
+import { Html, Head, Body } from '@wroud/vite-plugin-ssg/react/components';
 import App from './App';
 
-const rootElement = document.getElementById('root');
-if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+export default function Index(props: IndexComponentProps) {
+  return (
+    <Html lang="en">
+      <Head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>React Markdown Blog</title>
+      </Head>
+      <Body>
+        <App />
+      </Body>
+    </Html>
+  );
 }
-
-const root = ReactDOM.createRoot(rootElement);
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
-    

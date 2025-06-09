@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { fetchPostMetadataBySlug } from '../utils/postUtils';
+import { getAllPostMetadata } from '../utils/postUtils';
 import PostCard from '../components/PostCard';
 import { Post } from '../types';
 import { useSiteConfig } from '../contexts/SiteConfigContext';
@@ -14,30 +14,14 @@ const HomePage: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    const loadPosts = async () => {
+    const loadPosts = () => {
       setIsLoadingPosts(true);
       setPostsError(null);
       try {
-        const manifestResponse = await fetch('/content/posts-manifest.json');
-        if (!manifestResponse.ok) {
-          throw new Error(`Failed to fetch posts-manifest.json: ${manifestResponse.statusText}`);
-        }
-        const manifest = await manifestResponse.json();
-        const postSlugs: string[] = manifest.slugs || [];
-
-        if (postSlugs.length === 0) {
-          setAllPosts([]);
-          setIsLoadingPosts(false);
-          return;
-        }
-
-        const fetchedPostsMetadata = await Promise.all(
-          postSlugs.map(slug => fetchPostMetadataBySlug(slug))
+        const posts = getAllPostMetadata();
+        const sortedPosts = posts.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         );
-        
-        const validPosts = fetchedPostsMetadata.filter(post => !post.title.startsWith('Error Loading:'));
-        
-        const sortedPosts = validPosts.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setAllPosts(sortedPosts);
       } catch (err: any) {
         console.error("Failed to load posts:", err);
@@ -150,7 +134,7 @@ const HomePage: React.FC = () => {
       ) : (
         <div className="text-center py-12">
           <h2 className="text-2xl font-semibold text-gray-700">No posts yet!</h2>
-          <p className="text-gray-500 mt-2">Check back soon for new content, or ensure 'posts-manifest.json' is configured.</p>
+          <p className="text-gray-500 mt-2">Check back soon for new content.</p>
         </div>
       )}
     </div>

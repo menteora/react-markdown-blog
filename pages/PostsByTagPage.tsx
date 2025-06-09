@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { fetchPostMetadataBySlug } from '../utils/postUtils';
+import { getAllPostMetadata } from '../utils/postUtils';
 import PostCard from '../components/PostCard';
 import { Post } from '../types';
 
@@ -19,35 +19,17 @@ const PostsByTagPage: React.FC = () => {
       return;
     }
 
-    const loadPostsByTag = async () => {
+    const loadPostsByTag = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const manifestResponse = await fetch('/content/posts-manifest.json');
-        if (!manifestResponse.ok) {
-          throw new Error(`Failed to fetch posts-manifest.json: ${manifestResponse.statusText}`);
-        }
-        const manifest = await manifestResponse.json();
-        const postSlugs: string[] = manifest.slugs || [];
-        
-        if (postSlugs.length === 0) {
-          setFilteredPosts([]);
-          setIsLoading(false);
-          return;
-        }
-
-        const postsMetadata = await Promise.all(
-          postSlugs.map(slug => fetchPostMetadataBySlug(slug))
-        );
+        const postsMetadata = getAllPostMetadata();
         const validPosts = postsMetadata.filter(post => !post.title.startsWith('Error Loading:'));
-        
-        const postsForTag = validPosts.filter(post => 
+        const postsForTag = validPosts.filter(post =>
           post.tags.map(t => t.toLowerCase()).includes(tagName.toLowerCase())
         );
-        
         const sortedPosts = postsForTag.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setFilteredPosts(sortedPosts);
-
       } catch (err: any) {
         console.error(`Failed to load posts for tag "${tagName}":`, err);
         setError(`Could not load posts for tag "${tagName}". ${err.message || "Please try again later."}`);
@@ -106,8 +88,8 @@ const PostsByTagPage: React.FC = () => {
       ) : (
         <div className="text-center py-12">
           <h2 className="text-2xl font-semibold text-gray-700">No posts found for this tag.</h2>
-          <p className="text-gray-500 mt-2">Try browsing other tags or viewing all posts. Check 'posts-manifest.json' if you expect posts here.</p>
-          <Link 
+          <p className="text-gray-500 mt-2">Try browsing other tags or viewing all posts.</p>
+        <Link
             to="/" 
             className="mt-6 inline-block bg-primary-600 text-white font-semibold px-6 py-3 rounded hover:bg-primary-700 transition-colors duration-300"
           >
