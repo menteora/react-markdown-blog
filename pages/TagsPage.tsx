@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { fetchPostMetadataBySlug } from '../utils/postUtils';
+import { getAllPostMetadata } from '../utils/postUtils';
 import { Post } from '../types';
 
 const TagsPage: React.FC = () => {
@@ -9,28 +9,12 @@ const TagsPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadTags = async () => {
+    const loadTags = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const manifestResponse = await fetch('/content/posts-manifest.json');
-        if (!manifestResponse.ok) {
-          throw new Error(`Failed to fetch posts-manifest.json: ${manifestResponse.statusText}`);
-        }
-        const manifest = await manifestResponse.json();
-        const postSlugs: string[] = manifest.slugs || [];
-
-        if (postSlugs.length === 0) {
-          setTags([]);
-          setIsLoading(false);
-          return;
-        }
-
-        const postsMetadata = await Promise.all(
-          postSlugs.map(slug => fetchPostMetadataBySlug(slug))
-        );
-        const validPosts = postsMetadata.filter(post => !post.title.startsWith('Error Loading:'));
-        const allTagsWithDuplicates = validPosts.flatMap(post => post.tags);
+        const postsMetadata = getAllPostMetadata();
+        const allTagsWithDuplicates = postsMetadata.flatMap(post => post.tags);
         const uniqueTags = Array.from(new Set(allTagsWithDuplicates)).sort((a, b) => a.localeCompare(b));
         setTags(uniqueTags);
       } catch (err: any) {
@@ -84,7 +68,7 @@ const TagsPage: React.FC = () => {
       ) : (
         <div className="text-center py-12">
           <h2 className="text-2xl font-semibold text-gray-700">No tags found.</h2>
-          <p className="text-gray-500 mt-2">It looks like there are no tags associated with any posts yet, or 'posts-manifest.json' is not configured.</p>
+          <p className="text-gray-500 mt-2">It looks like there are no tags associated with any posts yet.</p>
         </div>
       )}
     </div>
